@@ -140,7 +140,6 @@ describe("CodeHawksNFT", () => {
         // User register
         await codeHawksNFT.connect(user).registerUser(user.address)
         await codeHawksNFT.connect(owner).registerUser(owner.address)
-
       })
 
       // Approve and mint
@@ -181,11 +180,11 @@ describe("CodeHawksNFT", () => {
         // Check owner balance after approval
         const ownerBalanceAfter = await codeHawksNFT.balanceOf(owner.address)
 
-        // Verifty ownership of the NFT for user address
+        // Verifty ownership of the NFT for user 
         const userNFT = await codeHawksNFT.ownerOf(1)
         expect(userNFT).to.equal(user.address)
 
-        // Verifty ownership of the NFT for owner address
+        // Verifty ownership of the NFT for owner 
         const ownerNft = await codeHawksNFT.ownerOf(2)
         expect(ownerNft).to.equal(owner.address)
       })
