@@ -18,11 +18,19 @@ contract CodeHawksNFT is ERC721 {
   mapping(address => Submission[]) public userSubmissions;
 
   /// @notice Tracks whether a user is registered to submit vulnerabilities
-  /// @notice A value of `true` means the user is registered
+  /// @notice A value of true means the user is registered
   mapping(address => bool) public userRegistered;
+
+  /// @notice Checks if submissions was approved
+  mapping(address => mapping(uint256 => bool)) public isApproved;
+
+  /// @notice store and retrieve all token IDs minted for each user
+  mapping(address => uint256[]) public userTokenIds;
 
   /// @notice Emit event for submission being created
   event SubmissionCreated(address contributor);
+  /// @notice Emit event for approved submissions
+  event Approved(address user, uint256 tokenId);
 
   modifier onlyOwner() {
       require(msg.sender == owner, "CodeHawksNFT: Only owner can call this function");
@@ -54,8 +62,6 @@ contract CodeHawksNFT is ERC721 {
       string memory _level
   ) public {
       require(userRegistered[msg.sender], "CodeHawksNFT: User must be registered");
-      totalCounter++;
-
       Submission memory newSubmission = Submission({
           contributor: msg.sender,
           poc: _poc,
@@ -66,8 +72,37 @@ contract CodeHawksNFT is ERC721 {
   }
 
   /// @dev Returns total submissions
-  function getUserSubmissions(address _user) public view returns (Submission[] memory) {
-      return userSubmissions[_user];
-  }   
-}
+  function getUserSubmissions() public view returns (Submission[] memory) {
+      return userSubmissions[msg.sender];
+  } 
 
+  /// @dev onlyOwner can approve submissions
+  /// @param user, Is user address
+  /// @param tokenId, Is uniq token id
+  /// @notice Checks if ID is valid
+  /// @notice Check that submission is not yet approved
+  /// @notice Sets submission to true, meaning submission was approved by the owner
+  /// @dev Once approved NFTs are minted based on the severity level
+  /// @notice Emit approved event with user and tokenId
+  function approveSubmissions(address user, uint256 tokenId) public onlyOwner {
+      require(tokenId < userSubmissions[user].length, "CodeHawksNFT: Invalid submission ID");
+      Submission storage submission = userSubmissions[user][tokenId];
+      require(!isApproved[user][tokenId], "CodeHawksNFT: Submission already approved");
+      isApproved[user][tokenId] = true;
+
+      uint256 nftCount = 0;
+      if (keccak256(bytes(submission.level)) == keccak256(bytes("Low"))) {
+          nftCount = 1;
+      } else if (keccak256(bytes(submission.level)) == keccak256(bytes("Medium"))) {
+          nftCount = 2;
+      } else if (keccak256(bytes(submission.level)) == keccak256(bytes("High"))) {
+          nftCount = 3;
+      }
+      
+      uint256 newTokenId = totalCounter;
+      totalCounter++;
+      _mint(user, newTokenId);
+      userTokenIds[user].push(newTokenId);
+      emit Approved(user, tokenId);
+  }
+}
