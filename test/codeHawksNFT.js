@@ -14,7 +14,7 @@ describe("CodeHawksNFT", () => {
   beforeEach(async () => {
     [owner, user] = await ethers.getSigners()
 
-    // Deplay contract
+    // Deploy contract
     const CodeHawksNFT = await ethers.getContractFactory("CodeHawksNFT")
     codeHawksNFT = await CodeHawksNFT.deploy(name, symbol)
     await codeHawksNFT.waitForDeployment()
